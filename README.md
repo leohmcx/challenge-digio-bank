@@ -1,1 +1,1 @@
-![example branch parameter](https://github.com/github/docs/actions/workflows/main.yml/badge.svg?branch=main)
+[![CI-CD](https://github.com/leohmcx/challenge-digio-bank/actions/workflows/cicd.yml/badge.svg)](https://github.com/leohmcx/challenge-digio-bank/actions/workflows/cicd.yml)
