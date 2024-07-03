@@ -40,19 +40,19 @@ public class CustomerOrderService {
     private final ProductDetailsClient productDetailsClient;
 
     public List<OrderCustomerTotal> findAll() {
-        return getOrderCustomer(null).stream()
+        return getOrderCustomer(null).parallelStream()
                 .sorted(comparing(OrderCustomerTotal::getTotalValue))
                 .toList();
     }
 
     public OrderCustomerTotal findGreatestBy(final Integer year) {
-        return getOrderCustomer(year).stream()
+        return getOrderCustomer(year).parallelStream()
                 .max(comparing(OrderCustomerTotal::getTotalValue))
                 .orElseThrow(() -> new NoContentException("No greatest value found"));
     }
 
     public List<OrderCustomerTotal> findLoyalCustomers() {
-        return getOrderCustomer(null).stream()
+        return getOrderCustomer(null).parallelStream()
                 .sorted(comparing(OrderCustomerTotal::getTotalValue).reversed())
                 .limit(THREE.intValue())
                 .toList();
@@ -61,10 +61,10 @@ public class CustomerOrderService {
     public List<RecommendationCustomer> findCustomerRecommendations() {
         return getOrderCustomer(null).parallelStream()
                 .map(order -> {
-                    final var purchaseMap = order.getPurchases().stream()
+                    final var purchaseMap = order.getPurchases().parallelStream()
                             .collect(groupingBy(Purchase::getType, summingInt(Purchase::getQuantity)))
                             .entrySet()
-                            .stream()
+                            .parallelStream()
                             .max(Map.Entry.comparingByValue())
                             .orElseThrow();
 
@@ -80,18 +80,18 @@ public class CustomerOrderService {
     private List<OrderCustomerTotal> getOrderCustomer(final Integer year) {
         final var customerOrders = ofNullable(customerOrderClient.getCustomerOrders())
                 .orElseThrow(() -> new NoContentException("No customer found"));
-        log.info("Customer orders: {}", customerOrders);
+        log.info("Customer orders integration finished, quantity: {}", customerOrders.size());
 
         final var products = ofNullable(productDetailsClient.getProducts())
                 .orElseThrow(() -> new NoContentException("No product found"));
-        log.info("Product details: {}", products);
+        log.info("Product details integration finished, quantity: {}", products.size());
 
-        final var productsMap = of(products.stream()
+        final var productsMap = of(products.parallelStream()
                 .filter(product -> isNull(year) || product.getYear().equals(year))
                 .collect(toMap(ProductDetails::getId, p -> p)))
                 .filter(MapUtils::isNotEmpty)
                 .orElseThrow(() -> new NoContentException("No product found for year " + year));
-        log.info("Product map: {}", productsMap);
+        log.info("Product details filter by year finished, quantity: {}", productsMap.size());
 
         return new OrderCustomerTotalMapper().apply(customerOrders, productsMap).parallelStream()
                 .peek(order -> {

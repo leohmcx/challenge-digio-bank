@@ -21,7 +21,7 @@ public class RestExceptionHandler {
 
     @ExceptionHandler
     ProblemDetail handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        final var fieldErrors = e.getFieldErrors().stream()
+        final var fieldErrors = e.getFieldErrors().parallelStream()
                 .map(f -> new InvalidParam(f.getField(), f.getDefaultMessage()))
                 .toList();
 

@@ -2,10 +2,12 @@ package com.bank.client.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Data;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 
 @Data
+@ToString(exclude = {"id", "price", "harvest"})
 public class ProductDetails {
     @JsonAlias("codigo")
     private String id;

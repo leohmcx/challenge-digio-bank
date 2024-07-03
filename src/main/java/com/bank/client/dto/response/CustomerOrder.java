@@ -2,11 +2,14 @@ package com.bank.client.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Data;
+import lombok.ToString;
 
 import java.util.List;
 
 @Data
+@ToString(exclude = {"document", "purchases"})
 public class CustomerOrder {
+
     @JsonAlias("nome")
     private String name;
 

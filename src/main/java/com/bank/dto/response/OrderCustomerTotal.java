@@ -11,16 +11,16 @@ import java.util.List;
 @Builder
 public class OrderCustomerTotal {
 
-    @JsonProperty("nomeCliente")
+    @JsonProperty("nome")
     private String name;
 
-    @JsonProperty("cpfCliente")
+    @JsonProperty("cpf")
     private String document;
 
-    @JsonProperty("quantidadeTotalCompra")
+    @JsonProperty("totalQty")
     private Integer totalQuantity;
 
-    @JsonProperty("valorTotalCompra")
+    @JsonProperty("totalValor")
     private BigDecimal totalValue;
 
     @JsonProperty("compras")
