@@ -12,7 +12,7 @@ interface ObservableConstants {
     String RESULT_OK_VALUE = "success";
     String RESULT_TAG = "result";
 
-    String SERVICE_DEFAULT = "proxy-pix-qrcode-santander";
+    String SERVICE_DEFAULT = "challenge-digio-bank";
     String SERVICE_REQUEST = "service.request";
     String SERVICE_TAG = "service";
 }

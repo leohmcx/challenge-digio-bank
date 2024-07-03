@@ -4,7 +4,6 @@ import com.bank.client.CustomerOrderClient;
 import com.bank.client.ProductDetailsClient;
 import com.bank.client.dto.response.CustomerOrder;
 import com.bank.client.dto.response.ProductDetails;
-import com.bank.exception.NoContentException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

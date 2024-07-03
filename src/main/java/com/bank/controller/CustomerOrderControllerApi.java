@@ -26,7 +26,7 @@ public interface CustomerOrderControllerApi {
             "valores totais de cada compra.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Purchase orders"),
-            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "204", description = "Not found"),
             @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
     })
@@ -37,7 +37,7 @@ public interface CustomerOrderControllerApi {
             "o nome do cliente, cpf do cliente, dado do produto, quantidade da compra e seu valor total.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Greatest purchase order found per year"),
-            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "204", description = "Not found"),
             @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
     })
@@ -48,7 +48,7 @@ public interface CustomerOrderControllerApi {
             "maiores valores.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Top 3 clientes mais fieis obtidas"),
-            @ApiResponse(responseCode = "404", description = "Top 3 clientes mais fieis não encontradas"),
+            @ApiResponse(responseCode = "204", description = "Top 3 clientes mais fieis não encontradas"),
             @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
     })
@@ -58,7 +58,7 @@ public interface CustomerOrderControllerApi {
             , description = "Retornar uma recomendação de vinho baseado nos tipos de vinho que o cliente mais compra.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Recomendações de vinhos obtidas"),
-            @ApiResponse(responseCode = "404", description = "Recomendações de vinhos não encontradas"),
+            @ApiResponse(responseCode = "204", description = "Recomendações de vinhos não encontradas"),
             @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
     })

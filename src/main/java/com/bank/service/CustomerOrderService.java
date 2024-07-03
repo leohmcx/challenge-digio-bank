@@ -6,9 +6,10 @@ import com.bank.client.dto.response.ProductDetails;
 import com.bank.dto.response.OrderCustomerTotal;
 import com.bank.dto.response.OrderCustomerTotal.Purchase;
 import com.bank.dto.response.RecommendationCustomer;
-import com.bank.exception.NoContentException;
+import com.bank.exception.ClientErrorException;
 import com.bank.mapper.OrderCustomerTotalMapper;
 import com.bank.monitoring.Observable;
+import com.bank.service.support.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
@@ -18,6 +19,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+import static com.bank.dto.ErrorType.NO_CONTENT;
+import static com.bank.dto.Message.NENHUM_RESULTADO_ENCONTRADO;
 import static com.bank.monitoring.Observable.OperationType.REST;
 import static com.bank.monitoring.domain.MetricValues.ALL_PURCHASES;
 import static com.bank.monitoring.domain.MetricValues.GREATEST_PURCHASE;
@@ -42,87 +45,88 @@ import static org.bouncycastle.math.ec.ECConstants.THREE;
 @RequiredArgsConstructor
 public class CustomerOrderService {
 
+    private final MessageService messageService;
     private final CustomerOrderClient customerOrderClient;
     private final ProductDetailsClient productDetailsClient;
 
     @Observable(operation = ALL_PURCHASES, type = REST)
     public List<OrderCustomerTotal> findAll() {
         return getOrderCustomer(null).parallelStream()
-                .sorted(comparing(OrderCustomerTotal::getTotalValue))
-                .toList();
+            .sorted(comparing(OrderCustomerTotal::getTotalValue))
+            .toList();
     }
 
     @Observable(operation = GREATEST_PURCHASE, type = REST)
     public OrderCustomerTotal findGreatestBy(final Integer year) {
         return getOrderCustomer(year).parallelStream()
-                .max(comparing(OrderCustomerTotal::getTotalValue))
-                .orElseThrow(() -> new NoContentException("No greatest value found"));
+            .max(comparing(OrderCustomerTotal::getTotalValue))
+            .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NENHUM_RESULTADO_ENCONTRADO)));
     }
 
     @Observable(operation = LOYAL_CUSTOMERS, type = REST)
     public List<OrderCustomerTotal> findLoyalCustomers() {
         return getOrderCustomer(null).parallelStream()
-                .sorted(comparing(OrderCustomerTotal::getTotalValue).reversed())
-                .limit(THREE.intValue())
-                .toList();
+            .sorted(comparing(OrderCustomerTotal::getTotalValue).reversed())
+            .limit(THREE.intValue())
+            .toList();
     }
 
     @Observable(operation = RECOMMENDATION, type = REST)
     public List<RecommendationCustomer> findCustomerRecommendations() {
         return getOrderCustomer(null).parallelStream()
-                .map(order -> {
-                    final var purchaseMap = order.getPurchases().parallelStream()
-                            .collect(groupingBy(Purchase::getType, summingInt(Purchase::getQuantity)))
-                            .entrySet()
-                            .parallelStream()
-                            .max(Map.Entry.comparingByValue())
-                            .orElseThrow();
+            .map(order -> {
+                final var purchaseMap = order.getPurchases().parallelStream()
+                    .collect(groupingBy(Purchase::getType, summingInt(Purchase::getQuantity)))
+                    .entrySet()
+                    .parallelStream()
+                    .max(Map.Entry.comparingByValue())
+                    .orElseThrow();
 
-                    return RecommendationCustomer.builder()
-                            .name(order.getName())
-                            .document(order.getDocument())
-                            .productType(purchaseMap.getKey())
-                            .totalQuantity(purchaseMap.getValue())
-                            .build();
-                }).toList();
+                return RecommendationCustomer.builder()
+                    .name(order.getName())
+                    .document(order.getDocument())
+                    .productType(purchaseMap.getKey())
+                    .totalQuantity(purchaseMap.getValue())
+                    .build();
+            }).toList();
     }
 
     private List<OrderCustomerTotal> getOrderCustomer(final Integer year) {
         final var customerOrders = ofNullable(customerOrderClient.getCustomerOrders())
-                .orElseThrow(() -> new NoContentException("No customer found"));
+            .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NENHUM_RESULTADO_ENCONTRADO)));
         log.info("Customer orders integration finished, quantity: {}", customerOrders.size());
 
         final var products = ofNullable(productDetailsClient.getProducts())
-                .orElseThrow(() -> new NoContentException("No product found"));
+            .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NENHUM_RESULTADO_ENCONTRADO)));
         log.info("Product details integration finished, quantity: {}", products.size());
 
         final var productsMap = of(products.parallelStream()
-                .filter(product -> isNull(year) || product.getYear().equals(year))
-                .collect(toMap(ProductDetails::getId, p -> p)))
-                .filter(MapUtils::isNotEmpty)
-                .orElseThrow(() -> new NoContentException("No product found for year " + year));
+            .filter(product -> isNull(year) || product.getYear().equals(year))
+            .collect(toMap(ProductDetails::getId, p -> p)))
+            .filter(MapUtils::isNotEmpty)
+            .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NENHUM_RESULTADO_ENCONTRADO)));
         log.info("Product details filter by year finished, quantity: {}", productsMap.size());
 
         return new OrderCustomerTotalMapper().apply(customerOrders, productsMap).parallelStream()
-                .peek(order -> {
-                    if (nonNull(year)) {
-                        order.getPurchases().parallelStream()
-                                .max(comparing(p -> p.getPrice().multiply(valueOf(p.getQuantity()))))
-                                .ifPresent(p -> order.setPurchases(singletonList(p)));
-                    }
+            .peek(order -> {
+                if (nonNull(year)) {
+                    order.getPurchases().parallelStream()
+                        .max(comparing(p -> p.getPrice().multiply(valueOf(p.getQuantity()))))
+                        .ifPresent(p -> order.setPurchases(singletonList(p)));
+                }
 
-                    var totalQuantity = order.getPurchases().parallelStream()
-                            .map(Purchase::getQuantity)
-                            .mapToInt(Integer::intValue)
-                            .sum();
+                var totalQuantity = order.getPurchases().parallelStream()
+                    .map(Purchase::getQuantity)
+                    .mapToInt(Integer::intValue)
+                    .sum();
 
-                    var totalValue = (order.getPurchases().parallelStream()
-                            .map(Purchase::getPrice)
-                            .reduce(ZERO, BigDecimal::add))
-                            .multiply(valueOf(totalQuantity));
+                var totalValue = (order.getPurchases().parallelStream()
+                    .map(Purchase::getPrice)
+                    .reduce(ZERO, BigDecimal::add))
+                    .multiply(valueOf(totalQuantity));
 
-                    order.setTotalQuantity(totalQuantity);
-                    order.setTotalValue(format(totalValue));
-                }).toList();
+                order.setTotalQuantity(totalQuantity);
+                order.setTotalValue(format(totalValue));
+            }).toList();
     }
 }

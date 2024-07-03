@@ -7,6 +7,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import static com.bank.monitoring.Observable.OperationType.NONE;
+import static com.bank.monitoring.ObservableConstants.SERVICE_DEFAULT;
+
 @Documented
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
@@ -14,8 +17,8 @@ import java.lang.annotation.Target;
 public @interface Observable {
 
     String operation();
-    String service() default ObservableConstants.SERVICE_DEFAULT;
-    OperationType type() default OperationType.NONE;
+    String service() default SERVICE_DEFAULT;
+    OperationType type() default NONE;
 
     enum OperationType {
         MESSAGING, REST, SOAP, NONE

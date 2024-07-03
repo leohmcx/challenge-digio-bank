@@ -7,10 +7,9 @@ import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.concurrent.Executor;
 
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -38,16 +37,16 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 @Slf4j
 class ObservableInterceptor {
 
-    private final MeterRegistry meterRegistry;
     private final Executor executor;
+    private final MeterRegistry meterRegistry;
 
     @Around("execution (@com.bank.Observable * *.*(..))")
     public Object observe(final ProceedingJoinPoint pjp) throws Throwable {
-        log.debug("Interceptando método observável: {}", pjp);
-        final long init = System.currentTimeMillis();
+        log.debug("Intercepting observable method: {}", pjp);
+        final var init = System.currentTimeMillis();
         try {
-            final Object result = pjp.proceed();
-            final long duration = System.currentTimeMillis() - init;
+            final var result = pjp.proceed();
+            final var duration = System.currentTimeMillis() - init;
             executor.execute(() -> register(pjp, duration, null));
 
             return result;
@@ -62,12 +61,14 @@ class ObservableInterceptor {
     private void register(final ProceedingJoinPoint pjp, final Long durationInMillis, final Throwable thr) {
         try {
             log.debug("Registering metrics: {}", pjp);
-            final Method method = ((MethodSignature) pjp.getSignature()).getMethod();
-            final Observable observable = method.getAnnotation(Observable.class);
+            final var method = ((MethodSignature) pjp.getSignature()).getMethod();
+            final var observable = method.getAnnotation(Observable.class);
+
             final Collection<Tag> tags = new ArrayList<>(resultAndErrorTags(thr));
             tags.add(Tag.of(OPERATION_TAG, observable.operation()));
             tags.add(Tag.of(OPERATION_TYPE_TAG, observable.type().toString().toLowerCase()));
             tags.add(Tag.of(SERVICE_TAG, observable.service()));
+
             recordMetric(durationInMillis, tags);
         } catch (final Throwable throwable) { // NOSONAR
             handleException(pjp, throwable);
@@ -79,24 +80,15 @@ class ObservableInterceptor {
     }
 
     void handleException(final ProceedingJoinPoint pjp, final Throwable throwable) {
-        log.warn("Erro ao coletar métricas de método observável: {}", pjp, throwable);
+        log.warn("Error while collecting metrics of an observable method: {}", pjp, throwable);
     }
 
     private static Collection<Tag> resultAndErrorTags(final Throwable thr) {
-        final Optional<Throwable> throwable = ofNullable(thr);
-        final Collection<Tag> tags = new ArrayList<>();
-        tags.add(Tag.of(RESULT_TAG, throwable
-                .map(t -> RESULT_NOK_VALUE)
-                .orElse(RESULT_OK_VALUE)));
-        tags.add(Tag.of(ERROR_TAG, throwable
-                .map(t -> t.getClass().getSimpleName())
-                .orElse(EMPTY)));
-        tags.add(Tag.of(ERROR_CAUSE_TAG, throwable
-                .filter(AbstractErrorException.class::isInstance)
-                .map(t -> (AbstractErrorException) t)
-                .map(aee -> aee.getErrorType().toString())
-                .orElse(EMPTY)));
-
-        return tags;
+        return Arrays.asList(
+                Tag.of(RESULT_TAG, ofNullable(thr).map(t -> RESULT_NOK_VALUE).orElse(RESULT_OK_VALUE)),
+                Tag.of(ERROR_TAG, ofNullable(thr).map(t -> t.getClass().getSimpleName()).orElse(EMPTY)),
+                Tag.of(ERROR_CAUSE_TAG, ofNullable(thr).filter(AbstractErrorException.class::isInstance)
+                        .map(t -> (AbstractErrorException) t).map(aee -> aee.getErrorType().toString()).orElse(EMPTY))
+        );
     }
 }
