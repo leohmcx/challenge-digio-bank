@@ -1,13 +1,14 @@
 package com.bank.dto;
 
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 import java.util.Arrays;
 
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+import static lombok.AccessLevel.PRIVATE;
+
+@AllArgsConstructor(access = PRIVATE)
 @Getter
 public enum ErrorType {
 

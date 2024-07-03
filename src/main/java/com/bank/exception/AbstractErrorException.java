@@ -26,5 +26,4 @@ public abstract class AbstractErrorException extends RuntimeException {
     }
 
     public abstract ErrorType getErrorType();
-
 }

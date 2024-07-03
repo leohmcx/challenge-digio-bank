@@ -1,17 +1,18 @@
 package com.bank.dto;
 
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import static lombok.AccessLevel.PRIVATE;
+
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = PRIVATE)
 public enum Message {
 
-    FALHA_INESPERADA("falha.inesperada"),
-    NENHUM_RESULTADO_ENCONTRADO("nenhum.resultado.encontrado"),
-    SERVICO_INDISPONIVEL("servico.indisponivel"),
-    FALHA_FEIGN_CLIENT("falha.feign.client");
+    UNEXPECTED_FAILED("falha.inesperada"),
+    NOTHING_FOUND("nenhum.resultado.encontrado"),
+    SERVICE_UNAVAILABLE("servico.indisponivel"),
+    FEIGN_CLIENT_FAILED("falha.feign.client");
 
     private final String message;
 }

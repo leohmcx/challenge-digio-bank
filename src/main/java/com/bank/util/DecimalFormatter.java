@@ -1,13 +1,13 @@
 package com.bank.util;
 
-import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
 import static java.math.RoundingMode.FLOOR;
+import static lombok.AccessLevel.PRIVATE;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = PRIVATE)
 public final class DecimalFormatter {
 
     private static final int DECIMAL_PLACES = 2;

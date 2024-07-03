@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.bank.dto.ErrorType.NO_CONTENT;
-import static com.bank.dto.Message.NENHUM_RESULTADO_ENCONTRADO;
+import static com.bank.dto.Message.NOTHING_FOUND;
 import static com.bank.monitoring.Observable.OperationType.REST;
 import static com.bank.monitoring.domain.MetricValues.ALL_PURCHASES;
 import static com.bank.monitoring.domain.MetricValues.GREATEST_PURCHASE;
@@ -60,7 +60,7 @@ public class CustomerOrderService {
     public OrderCustomerTotal findGreatestBy(final Integer year) {
         return getOrderCustomer(year).parallelStream()
             .max(comparing(OrderCustomerTotal::getTotalValue))
-            .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NENHUM_RESULTADO_ENCONTRADO)));
+            .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NOTHING_FOUND)));
     }
 
     @Observable(operation = LOYAL_CUSTOMERS, type = REST)
@@ -93,18 +93,18 @@ public class CustomerOrderService {
 
     private List<OrderCustomerTotal> getOrderCustomer(final Integer year) {
         final var customerOrders = ofNullable(customerOrderClient.getCustomerOrders())
-            .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NENHUM_RESULTADO_ENCONTRADO)));
+            .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NOTHING_FOUND)));
         log.info("Customer orders integration finished, quantity: {}", customerOrders.size());
 
         final var products = ofNullable(productDetailsClient.getProducts())
-            .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NENHUM_RESULTADO_ENCONTRADO)));
+            .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NOTHING_FOUND)));
         log.info("Product details integration finished, quantity: {}", products.size());
 
         final var productsMap = of(products.parallelStream()
             .filter(product -> isNull(year) || product.getYear().equals(year))
             .collect(toMap(ProductDetails::getId, p -> p)))
             .filter(MapUtils::isNotEmpty)
-            .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NENHUM_RESULTADO_ENCONTRADO)));
+            .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NOTHING_FOUND)));
         log.info("Product details filter by year finished, quantity: {}", productsMap.size());
 
         return new OrderCustomerTotalMapper().apply(customerOrders, productsMap).parallelStream()

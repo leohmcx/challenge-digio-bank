@@ -1,9 +1,10 @@
 package com.bank.monitoring.domain;
 
-import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+import static lombok.AccessLevel.PRIVATE;
+
+@NoArgsConstructor(access = PRIVATE)
 public final class MetricValues {
 
     public static final String ALL_PURCHASES = "find_all_purchases";
