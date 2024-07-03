@@ -89,12 +89,6 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>io.cucumber</groupId>
-			<artifactId>cucumber-jvm</artifactId>
-			<version>7.2.3</version>
-		</dependency>
-
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
