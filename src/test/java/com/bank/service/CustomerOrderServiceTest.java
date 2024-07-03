@@ -4,6 +4,8 @@ import com.bank.client.CustomerOrderClient;
 import com.bank.client.ProductDetailsClient;
 import com.bank.client.dto.response.CustomerOrder;
 import com.bank.client.dto.response.ProductDetails;
+import com.bank.exception.ClientErrorException;
+import com.bank.service.support.MessageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -32,6 +34,8 @@ class CustomerOrderServiceTest {
     private CustomerOrderService service;
 
     @Mock
+    private MessageService messageService;
+    @Mock
     private CustomerOrderClient orderClient;
     @Mock
     private ProductDetailsClient productClient;
@@ -52,7 +56,7 @@ class CustomerOrderServiceTest {
             when(orderClient.getCustomerOrders()).thenReturn(null);
 
             assertThat(catchThrowable(() -> service.findAll())).isNotNull()
-                    .isExactlyInstanceOf(NoContentException.class);
+                    .isExactlyInstanceOf(ClientErrorException.class);
         }
 
         @Test @DisplayName("Method: findAll - Should return an OrderCustomerTotal")
@@ -71,7 +75,7 @@ class CustomerOrderServiceTest {
             when(orderClient.getCustomerOrders()).thenReturn(null);
 
             assertThat(catchThrowable(() -> service.findGreatestBy(YEAR_NOT_FOUND))).isNotNull()
-                    .isExactlyInstanceOf(NoContentException.class);
+                    .isExactlyInstanceOf(ClientErrorException.class);
         }
 
         @Test @DisplayName("Method: findGreatestBy - Should return NoContentException when not found orders by year")
@@ -80,7 +84,7 @@ class CustomerOrderServiceTest {
             when(productClient.getProducts()).thenReturn(productDetails);
 
             assertThat(catchThrowable(() -> service.findGreatestBy(YEAR_NOT_FOUND))).isNotNull()
-                    .isExactlyInstanceOf(NoContentException.class);
+                    .isExactlyInstanceOf(ClientErrorException.class);
         }
 
         @Test @DisplayName("Method: findGreatestBy - Should return the greatest by year")
@@ -102,7 +106,7 @@ class CustomerOrderServiceTest {
             when(orderClient.getCustomerOrders()).thenReturn(null);
 
             assertThat(catchThrowable(() -> service.findLoyalCustomers())).isNotNull()
-                    .isExactlyInstanceOf(NoContentException.class);
+                    .isExactlyInstanceOf(ClientErrorException.class);
         }
 
         @Test @DisplayName("Method: findLoyalCustomers - Should return the loyal customers")
@@ -121,7 +125,7 @@ class CustomerOrderServiceTest {
             when(orderClient.getCustomerOrders()).thenReturn(null);
 
             assertThat(catchThrowable(() -> service.findCustomerRecommendations())).isNotNull()
-                    .isExactlyInstanceOf(NoContentException.class);
+                    .isExactlyInstanceOf(ClientErrorException.class);
         }
 
         @Test @DisplayName("Method: findCustomerRecommendations - Should return recommendations")
