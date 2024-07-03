@@ -1,6 +1,9 @@
+server:
+  port: 1122
 spring:
   application:
     name: challenge-digio-bank
 
-external-ms:
-  url: "http://localhost:8099"
+management:
+  server:
+    port: 9091
