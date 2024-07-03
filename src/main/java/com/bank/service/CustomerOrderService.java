@@ -8,6 +8,7 @@ import com.bank.dto.response.OrderCustomerTotal.Purchase;
 import com.bank.dto.response.RecommendationCustomer;
 import com.bank.exception.NoContentException;
 import com.bank.mapper.OrderCustomerTotalMapper;
+import com.bank.monitoring.Observable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
@@ -17,6 +18,11 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+import static com.bank.monitoring.Observable.OperationType.REST;
+import static com.bank.monitoring.domain.MetricValues.ALL_PURCHASES;
+import static com.bank.monitoring.domain.MetricValues.GREATEST_PURCHASE;
+import static com.bank.monitoring.domain.MetricValues.LOYAL_CUSTOMERS;
+import static com.bank.monitoring.domain.MetricValues.RECOMMENDATION;
 import static com.bank.util.DecimalFormatter.format;
 import static java.math.BigDecimal.ZERO;
 import static java.math.BigDecimal.valueOf;
@@ -39,18 +45,21 @@ public class CustomerOrderService {
     private final CustomerOrderClient customerOrderClient;
     private final ProductDetailsClient productDetailsClient;
 
+    @Observable(operation = ALL_PURCHASES, type = REST)
     public List<OrderCustomerTotal> findAll() {
         return getOrderCustomer(null).parallelStream()
                 .sorted(comparing(OrderCustomerTotal::getTotalValue))
                 .toList();
     }
 
+    @Observable(operation = GREATEST_PURCHASE, type = REST)
     public OrderCustomerTotal findGreatestBy(final Integer year) {
         return getOrderCustomer(year).parallelStream()
                 .max(comparing(OrderCustomerTotal::getTotalValue))
                 .orElseThrow(() -> new NoContentException("No greatest value found"));
     }
 
+    @Observable(operation = LOYAL_CUSTOMERS, type = REST)
     public List<OrderCustomerTotal> findLoyalCustomers() {
         return getOrderCustomer(null).parallelStream()
                 .sorted(comparing(OrderCustomerTotal::getTotalValue).reversed())
@@ -58,6 +67,7 @@ public class CustomerOrderService {
                 .toList();
     }
 
+    @Observable(operation = RECOMMENDATION, type = REST)
     public List<RecommendationCustomer> findCustomerRecommendations() {
         return getOrderCustomer(null).parallelStream()
                 .map(order -> {

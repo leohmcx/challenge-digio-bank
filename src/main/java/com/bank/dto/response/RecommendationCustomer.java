@@ -17,6 +17,6 @@ public class RecommendationCustomer {
     @JsonProperty("recomendacao")
     private String productType;
 
-    @JsonProperty("quantidade")
+    @JsonProperty("totalQty")
     private Integer totalQuantity;
 }

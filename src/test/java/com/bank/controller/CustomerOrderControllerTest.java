@@ -20,7 +20,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class CustomerOrderControllerTest {
 
     private static final Integer YEAR = 2020;
+    private static final String FIND_ALL = "/v1/compras";
+    private static final String LOYAL_CUSTOMERS = "/v1/clientes_fieis";
     private static final String GREATEST_PURCHASE = "/v1/maior_compra/{year}";
+    private static final String RECOMMENDATION = "/v1/recomendacao/cliente/tipo";
 
     @Autowired
     private MockMvc mockMvc;
@@ -30,11 +33,34 @@ class CustomerOrderControllerTest {
     private CustomerOrderService service;
 
     @Test
-    void shouldReturnOk() throws Exception {
-        mockMvc.perform(get(GREATEST_PURCHASE, YEAR).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
+    void shouldReturnFindAllOk() throws Exception {
+        mockMvc.perform(get(FIND_ALL).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
+                .andDo(print());
+
+        verify(service, atMostOnce()).findAll();
+    }
+
+    @Test
+    void shouldReturnFindGreatestByYearOk() throws Exception {
+        mockMvc.perform(get(GREATEST_PURCHASE, YEAR).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andDo(print());
 
         verify(service, atMostOnce()).findGreatestBy(anyInt());
+    }
+
+    @Test
+    void shouldFindLoyalCustomersOk() throws Exception {
+        mockMvc.perform(get(LOYAL_CUSTOMERS).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
+                .andDo(print());
+
+        verify(service, atMostOnce()).findLoyalCustomers();
+    }
+
+    @Test
+    void shouldReturnOk() throws Exception {
+        mockMvc.perform(get(RECOMMENDATION).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
+                .andDo(print());
+
+        verify(service, atMostOnce()).findCustomerRecommendations();
     }
 }
