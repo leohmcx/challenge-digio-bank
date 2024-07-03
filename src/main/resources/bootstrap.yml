@@ -1,0 +1,34 @@
+logging:
+  level:
+    root: WARN
+
+management:
+  endpoint:
+    health:
+      enabled: true
+      show-details: ALWAYS
+    prometheus:
+      enabled: true
+    refresh:
+      enabled: true
+  endpoints:
+    enabled-by-default: false
+    web:
+      base-path:
+      exposure:
+        include:
+          - health
+          - prometheus
+      path-mapping:
+        prometheus: /metrics
+  server:
+    add-application-context-header: false
+
+spring:
+  application:
+    name: challenge-digio-bank
+  cloud:
+    discovery:
+      enabled: false
+    refresh:
+      enabled: true

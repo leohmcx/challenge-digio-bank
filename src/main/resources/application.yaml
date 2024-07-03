@@ -1,0 +1,48 @@
+logging:
+  level:
+    com.bank: ${LOG_LEVEL_API:INFO}
+    org.springframework.web.client.RestTemplate: ${LOG_LEVEL_REST_TEMPLATE:DEBUG}
+
+management:
+  server:
+    port: 9090
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - prometheus
+
+server:
+  compression:
+    enabled: true
+  port: 8080
+  servlet:
+    context-path: /
+  error:
+    include-binding-errors: always
+  shutdown: graceful
+
+spring:
+  application:
+    name: challenge-digio-bank
+  jackson:
+    time-zone: America/Sao_Paulo
+  jmx:
+    enabled: false
+  messages:
+    basename: i18n/messages
+  cloud:
+    config:
+      enabled: false
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 123000
+            read-timeout: 123000
+            logger-level: full
+          product-api:
+            url: ${PRODUCT_BASE_URL:https://rgr3viiqdl8sikgv.public.blob.vercel-storage.com/produtos-mnboX5IPl6VgG390FECTKqHsD9SkLS.json}
+          customer-order-api:
+            url: ${CUSTOMER_ORDER_BASE_URL:https://rgr3viiqdl8sikgv.public.blob.vercel-storage.com/clientes-Vz1U6aR3GTsjb3W8BRJhcNKmA81pVh.json}
