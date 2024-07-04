@@ -22,7 +22,7 @@ Pojo: `name, document, products details, total purchase quantities and values.`
 - `GET /maior-compra/{ano}` - Return the greatest purchase for the year.
 - `GET /clientes-fieis` - Return top 3 loyal customers with the greatest recurring purchases.
 
-Pojo: `name, document, recomendation, total purchase quantities and values.`
+Pojo: `name, document, recomendation, total purchase quantities.`
 - `GET /recomendacao/cliente/tipo` - Return a recommendation of wine based in the types of customer most buy.
 
 
