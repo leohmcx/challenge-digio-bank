@@ -12,6 +12,7 @@ management:
         include:
           - health
           - prometheus
+          - info
 
 server:
   compression:
