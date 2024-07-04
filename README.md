@@ -5,9 +5,14 @@ Available endpoints:
 - http://localhost:8080/v1/clientes_fieis
 - http://localhost:8080/v1/recomendacao/cliente/tipo
 
+Swagger:
+- http://localhost:8080/swagger-ui/index.html#/
+
 Mock: 
-- ProductDetails:`https://rgr3viiqdl8sikgv.public.blob.vercel-storage.com/produtos-mnboX5IPl6VgG390FECTKqHsD9SkLS.json`
-- CustomerPurchases: `https://rgr3viiqdl8sikgv.public.blob.vercel-storage.com/clientes-Vz1U6aR3GTsjb3W8BRJhcNKmA81pVh.json`
+- ProductDetails:
+  - https://rgr3viiqdl8sikgv.public.blob.vercel-storage.com/produtos-mnboX5IPl6VgG390FECTKqHsD9SkLS.json
+- CustomerPurchases: 
+  - https://rgr3viiqdl8sikgv.public.blob.vercel-storage.com/clientes-Vz1U6aR3GTsjb3W8BRJhcNKmA81pVh.json
 
 
 Create a microservice whith the following endpoints after consumming the mocks above and return the requests bellow:

@@ -2,6 +2,7 @@ package com.bank.service;
 
 import com.bank.client.CustomerOrderClient;
 import com.bank.client.ProductDetailsClient;
+import com.bank.client.dto.response.CustomerOrder;
 import com.bank.client.dto.response.ProductDetails;
 import com.bank.dto.response.OrderCustomerTotal;
 import com.bank.dto.response.OrderCustomerTotal.Purchase;
@@ -35,6 +36,7 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingInt;
 import static java.util.stream.Collectors.toMap;
@@ -59,74 +61,88 @@ public class CustomerOrderService {
     @Observable(operation = GREATEST_PURCHASE, type = REST)
     public OrderCustomerTotal findGreatestBy(final Integer year) {
         return getOrderCustomer(year).parallelStream()
-            .max(comparing(OrderCustomerTotal::getTotalValue))
-            .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NOTHING_FOUND)));
+                .max(comparing(OrderCustomerTotal::getTotalValue))
+                .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NOTHING_FOUND)));
     }
 
     @Observable(operation = LOYAL_CUSTOMERS, type = REST)
     public List<OrderCustomerTotal> findLoyalCustomers() {
         return getOrderCustomer(null).parallelStream()
-            .sorted(comparing(OrderCustomerTotal::getTotalValue).reversed())
-            .limit(THREE.intValue())
-            .toList();
+                .sorted(comparing(OrderCustomerTotal::getTotalValue).reversed())
+                .limit(THREE.intValue())
+                .toList();
     }
 
     @Observable(operation = RECOMMENDATION, type = REST)
     public List<RecommendationCustomer> findCustomerRecommendations() {
         return getOrderCustomer(null).parallelStream()
-            .map(order -> {
-                final var purchaseMap = order.getPurchases().parallelStream()
-                    .collect(groupingBy(Purchase::getType, summingInt(Purchase::getQuantity)))
-                    .entrySet()
-                    .parallelStream()
-                    .max(Map.Entry.comparingByValue())
-                    .orElseThrow();
+                .map(CustomerOrderService::getRecommendationCustomer)
+                .toList();
+    }
 
-                return RecommendationCustomer.builder()
-                    .name(order.getName())
-                    .document(order.getDocument())
-                    .productType(purchaseMap.getKey())
-                    .totalQuantity(purchaseMap.getValue())
-                    .build();
-            }).toList();
+    private static RecommendationCustomer getRecommendationCustomer(final OrderCustomerTotal order) {
+        final var purchaseMap = order.getPurchases().stream()
+                .collect(groupingBy(Purchase::getType, summingInt(Purchase::getQuantity))).entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .orElseThrow();
+
+        return RecommendationCustomer.builder()
+                .name(order.getName())
+                .document(order.getDocument())
+                .productType(purchaseMap.getKey())
+                .totalQuantity(purchaseMap.getValue())
+                .build();
     }
 
     private List<OrderCustomerTotal> getOrderCustomer(final Integer year) {
-        final var customerOrders = ofNullable(customerOrderClient.getCustomerOrders())
-            .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NOTHING_FOUND)));
-        log.info("Customer orders integration finished, quantity: {}", customerOrders.size());
+        return new OrderCustomerTotalMapper().apply(getCustomerOrders(), getStringProductDetailsMap(year)).stream()
+                .map(order -> summarizer(year, order))
+                .toList();
+    }
 
+    private Map<String, ProductDetails> getStringProductDetailsMap(Integer year) {
         final var products = ofNullable(productDetailsClient.getProducts())
-            .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NOTHING_FOUND)));
+                .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NOTHING_FOUND)));
         log.info("Product details integration finished, quantity: {}", products.size());
 
-        final var productsMap = of(products.parallelStream()
-            .filter(product -> isNull(year) || product.getYear().equals(year))
-            .collect(toMap(ProductDetails::getId, p -> p)))
-            .filter(MapUtils::isNotEmpty)
-            .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NOTHING_FOUND)));
+        final var productsMap = of(products.stream()
+                .filter(product -> isNull(year) || product.getYear().equals(year))
+                .collect(toMap(ProductDetails::getId, identity())))
+                .filter(MapUtils::isNotEmpty)
+                .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NOTHING_FOUND)));
         log.info("Product details filter by year finished, quantity: {}", productsMap.size());
 
-        return new OrderCustomerTotalMapper().apply(customerOrders, productsMap).parallelStream()
-            .peek(order -> {
-                if (nonNull(year)) {
-                    order.getPurchases().parallelStream()
-                        .max(comparing(p -> p.getPrice().multiply(valueOf(p.getQuantity()))))
-                        .ifPresent(p -> order.setPurchases(singletonList(p)));
-                }
+        return productsMap;
+    }
 
-                var totalQuantity = order.getPurchases().parallelStream()
-                    .map(Purchase::getQuantity)
-                    .mapToInt(Integer::intValue)
-                    .sum();
+    private List<CustomerOrder> getCustomerOrders() {
+        final var customerOrders = ofNullable(customerOrderClient.getCustomerOrders())
+                .orElseThrow(() -> new ClientErrorException(NO_CONTENT, messageService.get(NOTHING_FOUND)));
+        log.info("Customer orders integration finished, quantity: {}", customerOrders.size());
 
-                var totalValue = (order.getPurchases().parallelStream()
-                    .map(Purchase::getPrice)
-                    .reduce(ZERO, BigDecimal::add))
-                    .multiply(valueOf(totalQuantity));
+        return customerOrders;
+    }
 
-                order.setTotalQuantity(totalQuantity);
-                order.setTotalValue(format(totalValue));
-            }).toList();
+    private OrderCustomerTotal summarizer(final Integer year, final OrderCustomerTotal order) {
+        if (nonNull(year)) {
+            order.getPurchases().stream()
+                    .max(comparing(p -> p.getPrice().multiply(valueOf(p.getQuantity()))))
+                    .ifPresent(p -> order.setPurchases(singletonList(p)));
+        }
+
+        var totalQuantity = order.getPurchases().stream()
+                .map(Purchase::getQuantity)
+                .mapToInt(Integer::intValue)
+                .sum();
+
+        var totalValue = (order.getPurchases().stream()
+                .map(Purchase::getPrice)
+                .reduce(ZERO, BigDecimal::add))
+                .multiply(valueOf(totalQuantity));
+
+        order.setTotalQuantity(totalQuantity);
+        order.setTotalValue(format(totalValue));
+
+        return order;
     }
 }
