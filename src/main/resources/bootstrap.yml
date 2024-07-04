@@ -2,7 +2,16 @@ logging:
   level:
     root: WARN
 
+info:
+  application:
+    name: '@project.name@'
+    description: '@project.description@'
+    version: '@project.version@'
+
 management:
+  info:
+    env:
+      enabled: true
   endpoint:
     health:
       enabled: true
@@ -19,6 +28,7 @@ management:
         include:
           - health
           - prometheus
+          - info
       path-mapping:
         prometheus: /metrics
   server:

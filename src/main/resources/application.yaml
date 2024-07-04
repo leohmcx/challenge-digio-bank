@@ -4,6 +4,9 @@ logging:
     org.springframework.web.client.RestTemplate: ${LOG_LEVEL_REST_TEMPLATE:DEBUG}
 
 management:
+  info:
+    env:
+      enabled: true
   server:
     port: 9090
   endpoints:
@@ -13,6 +16,12 @@ management:
           - health
           - prometheus
           - info
+
+info:
+  application:
+    name: '@project.name@'
+    description: '@project.description@'
+    version: '@project.version@'
 
 server:
   compression:
